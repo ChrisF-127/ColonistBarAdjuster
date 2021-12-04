@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+	<SY_CBA.BaseScale>Base scale</SY_CBA.BaseScale>
+	<SY_CBA.BaseScaleDesc>Scales the colonist bar
+If the number of colonists is greater than "colonists per row" * "maxmimum number of rows", this scaling will be ignored and the bar will be scaled down to fit the screen</SY_CBA.BaseScaleDesc>
+	<SY_CBA.ColonistsPerRow>Colonists per row</SY_CBA.ColonistsPerRow>
+	<SY_CBA.ColonistsPerRowDesc>Desired maximum number of colonists per row
+If the number of colonists is greater than "colonists per row" * "maxmimum number of rows", this limit will be ignored and the bar will be scaled down to fit the screen</SY_CBA.ColonistsPerRowDesc>
+	<SY_CBA.MaxNumOfRows>Maximum number of rows</SY_CBA.MaxNumOfRows>
+	<SY_CBA.MaxNumOfRowsDesc>Limits the number of rows</SY_CBA.MaxNumOfRowsDesc>
+	<SY_CBA.MarginX>Margin between colonists</SY_CBA.MarginX>
+	<SY_CBA.MarginXDesc>Adjust the space between colonists</SY_CBA.MarginXDesc>
+	<SY_CBA.MarginY>Margin between rows</SY_CBA.MarginY>
+	<SY_CBA.MarginYDesc>Adjust the space between rows</SY_CBA.MarginYDesc>
+</LanguageData>
