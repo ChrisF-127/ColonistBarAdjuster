@@ -18,5 +18,9 @@
 	<loadAfter>
 		<li>brrainz.harmony</li>
 	</loadAfter>
-	<description></description>
+	<description>This mod lets you adjust the colonist bar on the top of the screen.
+
+Overall scale, colonists per row, number of rows, margin between colonists and between rows can be adjusted.
+
+If the number of colonists is larger than the desired colonists per row times row count, scale and colonists per row will be ignored to fit all colonists into the desired number of rows.</description>
 </ModMetaData>
