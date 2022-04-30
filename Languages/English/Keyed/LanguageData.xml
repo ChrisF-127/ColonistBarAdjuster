@@ -12,4 +12,7 @@ If the number of colonists is greater than "colonists per row" * "maxmimum numbe
 	<SY_CBA.MarginXDesc>Adjust the space between colonists</SY_CBA.MarginXDesc>
 	<SY_CBA.MarginY>Margin between rows</SY_CBA.MarginY>
 	<SY_CBA.MarginYDesc>Adjust the space between rows</SY_CBA.MarginYDesc>
+	<SY_CBA.HideBackground>Hide background</SY_CBA.HideBackground>
+	<SY_CBA.HideBackgroundDesc>Hide background box around colonists
+(If colonist are out on a caravan or there is more than one colony)</SY_CBA.HideBackgroundDesc>
 </LanguageData>
