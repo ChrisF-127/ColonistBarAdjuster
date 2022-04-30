@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,12 +33,16 @@ namespace ColonistBarAdjuster
 				typeof(ColonistBarDrawLocsFinder).GetMethod("CalculateDrawLocs", BindingFlags.Instance | BindingFlags.NonPublic,
 					null, new Type[] { typeof(List<Vector2>), typeof(float), typeof(bool), typeof(int), typeof(int) }, null),
 				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistMarginAdjustment_Transpiler)));
+
+			harmony.Patch(
+				typeof(ColonistBarColonistDrawer).GetMethod("DrawGroupFrame", BindingFlags.Instance | BindingFlags.Public),
+				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarColonistDrawer_DrawGroupFrame_Transpiler)));
 		}
 
-		public static bool ColonistBarDrawLocsFinder_FindBestScale_Prefix(ColonistBarDrawLocsFinder __instance, ref float __result, ref bool onlyOneRow, ref int maxPerGlobalRow, int groupsCount)
+		static bool ColonistBarDrawLocsFinder_FindBestScale_Prefix(ColonistBarDrawLocsFinder __instance, ref float __result, ref bool onlyOneRow, ref int maxPerGlobalRow, int groupsCount)
 		{
-			float scale = ColonistBarAdjuster.Instance.BaseScale;
-			maxPerGlobalRow = ColonistBarAdjuster.Instance.ColonistsPerRow;
+			float scale = ColonistBarAdjuster.BaseScale;
+			maxPerGlobalRow = ColonistBarAdjuster.ColonistsPerRow;
 			List<ColonistBar.Entry> entries = __instance.ColonistBar.Entries;
 			while (true)
 			{
@@ -45,7 +50,7 @@ namespace ColonistBarAdjuster
 
 				if (__instance.TryDistributeHorizontalSlotsBetweenGroups(maxPerGlobalRow, groupsCount))
 				{
-					int allowedRowsCountForScale = ColonistBarAdjuster.Instance.MaxNumberOfRows;
+					int allowedRowsCountForScale = ColonistBarAdjuster.MaxNumberOfRows;
 					bool flag = true;
 					int group = -1;
 					for (int i = 0; i < entries.Count; i++)
@@ -70,7 +75,7 @@ namespace ColonistBarAdjuster
 				// use standard RimWorld logic if we fail to create the colonist bar while respecting the limitations set in the settings (colonists per row & row count)
 				scale *= 0.95f;
 
-				float widthPerColonist = (ColonistBar.BaseSize.x + GetColonistMarginX()) * scale;
+				float widthPerColonist = (ColonistBar.BaseSize.x + ColonistBarAdjuster.MarginX) * scale;
 				float totalWidth = ColonistBarDrawLocsFinder.MaxColonistBarWidth - (groupsCount - 1f) * 25f * scale; 
 				maxPerGlobalRow = Mathf.FloorToInt(totalWidth / widthPerColonist);
 			}
@@ -80,7 +85,7 @@ namespace ColonistBarAdjuster
 		}
 
 
-		public static IEnumerable<CodeInstruction> ColonistMarginAdjustment_Transpiler(IEnumerable<CodeInstruction> instructions)
+		static IEnumerable<CodeInstruction> ColonistMarginAdjustment_Transpiler(IEnumerable<CodeInstruction> instructions)
 		{
 			bool baseSizeFound = false;
 			bool baseSizeXFound = false;
@@ -123,13 +128,13 @@ namespace ColonistBarAdjuster
 						{
 							//Log.Warning("REPLACING X MARGIN");
 							instruction.opcode = OpCodes.Call;
-							instruction.operand = GetColonistMarginXMethodInfo;
+							instruction.operand = typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.MarginX), BindingFlags.Static | BindingFlags.Public).GetGetMethod();
 						}
 						else if (baseSizeYFound && value == ColonistBarAdjuster.BaseMarginY)
 						{
 							//Log.Warning("REPLACING Y MARGIN");
 							instruction.opcode = OpCodes.Call;
-							instruction.operand = GetColonistMarginYMethodInfo;
+							instruction.operand = typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.MarginY), BindingFlags.Static | BindingFlags.Public).GetGetMethod();
 						}
 					}
 
@@ -147,10 +152,25 @@ namespace ColonistBarAdjuster
 			}
 		}
 
-		private static readonly MethodInfo GetColonistMarginXMethodInfo = ((Func<float>)GetColonistMarginX).GetMethodInfo();
-		private static float GetColonistMarginX() => ColonistBarAdjuster.Instance.MarginX;
+		static IEnumerable<CodeInstruction> ColonistBarColonistDrawer_DrawGroupFrame_Transpiler(IEnumerable<CodeInstruction> instructions)
+		{
+			var endLabel = new Label();
 
-		private static readonly MethodInfo GetColonistMarginYMethodInfo = ((Func<float>)GetColonistMarginY).GetMethodInfo();
-		private static float GetColonistMarginY() => ColonistBarAdjuster.Instance.MarginY;
+			var addedInstruction = new CodeInstruction(OpCodes.Call, typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.HideBackground), BindingFlags.Static | BindingFlags.Public).GetGetMethod());
+			//Log.Warning(addedInstruction.ToString());
+			yield return addedInstruction;
+
+			addedInstruction = new CodeInstruction(OpCodes.Brtrue, endLabel);
+			//Log.Warning(addedInstruction.ToString());
+			yield return addedInstruction;
+
+			foreach (var instruction in instructions)
+			{
+				if (instruction.opcode == OpCodes.Ret)
+					instruction.labels.Add(endLabel);
+				//Log.Message(instruction.ToString());
+				yield return instruction;
+			}
+		}
 	}
 }

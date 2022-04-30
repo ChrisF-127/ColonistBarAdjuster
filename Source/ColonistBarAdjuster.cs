@@ -12,28 +12,23 @@ namespace ColonistBarAdjuster
 {
 	public class ColonistBarAdjuster : HugsLib.ModBase
 	{
-		public static ColonistBarAdjuster Instance { get; private set; }
-
 		public override string ModIdentifier => "ColonistBarAdjuster";
 
 		public const float BaseMarginX = 24f;
 		public const float BaseMarginY = 32f;
 
 		private SettingHandle<float> _baseScale;
-		public float BaseScale { get; private set; }
+		public static float BaseScale { get; private set; }
 		private SettingHandle<int> _colonistsPerRow;
-		public int ColonistsPerRow { get; private set; }
+		public static int ColonistsPerRow { get; private set; }
 		private SettingHandle<int> _maxNumberOfRows;
-		public int MaxNumberOfRows { get; private set; }
+		public static int MaxNumberOfRows { get; private set; }
 		private SettingHandle<float> _marginX;
-		public float MarginX { get; private set; }
+		public static float MarginX { get; private set; }
 		private SettingHandle<float> _marginY;
-		public float MarginY { get; private set; }
-
-		public ColonistBarAdjuster()
-		{
-			Instance = this;
-		}
+		public static float MarginY { get; private set; }
+		private SettingHandle<bool> _hideBackground;
+		public static bool HideBackground { get; private set; }
 
 		public override void DefsLoaded()
 		{
@@ -77,6 +72,13 @@ namespace ColonistBarAdjuster
 				Validators.FloatRangeValidator(0f, 100f));
 			_marginY.ValueChanged += val => ValueChanged();
 
+			_hideBackground = Settings.GetHandle(
+				"hideBackground",
+				"SY_CBA.HideBackground".Translate(),
+				"SY_CBA.HideBackgroundDesc".Translate(),
+				HideBackground);
+			_hideBackground.ValueChanged += val => ValueChanged();
+
 			ValueChanged();
 		}
 
@@ -87,6 +89,7 @@ namespace ColonistBarAdjuster
 			MaxNumberOfRows = _maxNumberOfRows;
 			MarginX = _marginX;
 			MarginY = _marginY;
+			HideBackground = _hideBackground;
 
 			if (GenScene.InPlayScene)
 			{
