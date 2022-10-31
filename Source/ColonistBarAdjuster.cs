@@ -14,9 +14,15 @@ namespace ColonistBarAdjuster
 	{
 		public override string ModIdentifier => "ColonistBarAdjuster";
 
+		public const float BaseOffsetX = 0f;
+		public const float BaseOffsetY = 0f;
 		public const float BaseMarginX = 24f;
 		public const float BaseMarginY = 32f;
 
+		private SettingHandle<float> _offsetX;
+		public static float OffsetX { get; private set; }
+		private SettingHandle<float> _offsetY;
+		public static float OffsetY { get; private set; }
 		private SettingHandle<float> _baseScale;
 		public static float BaseScale { get; private set; }
 		private SettingHandle<int> _colonistsPerRow;
@@ -32,6 +38,20 @@ namespace ColonistBarAdjuster
 
 		public override void DefsLoaded()
 		{
+			_offsetX = Settings.GetHandle(
+				"offsetX",
+				"SY_CBA.OffsetX".Translate(),
+				"SY_CBA.OffsetXDesc".Translate(),
+				BaseOffsetX);
+			_offsetX.ValueChanged += val => ValueChanged();
+
+			_offsetY = Settings.GetHandle(
+				"offsetY",
+				"SY_CBA.OffsetY".Translate(),
+				"SY_CBA.OffsetYDesc".Translate(),
+				BaseOffsetY);
+			_offsetY.ValueChanged += val => ValueChanged();
+
 			_baseScale = Settings.GetHandle(
 				"baseScale",
 				"SY_CBA.BaseScale".Translate(),
@@ -84,6 +104,8 @@ namespace ColonistBarAdjuster
 
 		private void ValueChanged()
 		{
+			OffsetX = _offsetX;
+			OffsetY = _offsetY;
 			BaseScale = _baseScale;
 			ColonistsPerRow = _colonistsPerRow;
 			MaxNumberOfRows = _maxNumberOfRows;

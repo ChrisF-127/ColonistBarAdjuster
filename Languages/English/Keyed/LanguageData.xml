@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
+	<SY_CBA.OffsetX>Offset from left</SY_CBA.OffsetX>
+	<SY_CBA.OffsetXDesc>Adjust the offset of the bar from left, positive numbers move the bar right, negative move it left</SY_CBA.OffsetXDesc>
+	<SY_CBA.OffsetY>Offset from top</SY_CBA.OffsetY>
+	<SY_CBA.OffsetYDesc>Adjust the offset of the bar from top, positive numbers move the bar down, negative move it up</SY_CBA.OffsetYDesc>
 	<SY_CBA.BaseScale>Base scale</SY_CBA.BaseScale>
 	<SY_CBA.BaseScaleDesc>Scales the colonist bar
 If the number of colonists is greater than "colonists per row" * "maxmimum number of rows", this scaling will be ignored and the bar will be scaled down to fit the screen</SY_CBA.BaseScaleDesc>

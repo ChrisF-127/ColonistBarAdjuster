@@ -22,21 +22,38 @@ namespace ColonistBarAdjuster
 			Harmony harmony = new Harmony("syrus.colonistbaradjuster");
 
 			harmony.Patch(
-				typeof(ColonistBarDrawLocsFinder).GetMethod("FindBestScale", BindingFlags.Instance | BindingFlags.NonPublic,
+				typeof(ColonistBarDrawLocsFinder).GetMethod(nameof(ColonistBarDrawLocsFinder.FindBestScale), BindingFlags.Instance | BindingFlags.NonPublic,
 					null, new Type[] { typeof(bool).MakeByRefType(), typeof(int).MakeByRefType(), typeof(int) }, null),
 				prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarDrawLocsFinder_FindBestScale_Prefix)));
 
 			harmony.Patch(
-				typeof(ColonistBarDrawLocsFinder).GetMethod("GetDrawLoc", BindingFlags.Instance | BindingFlags.NonPublic),
+				typeof(ColonistBarDrawLocsFinder).GetMethod(nameof(ColonistBarDrawLocsFinder.GetDrawLoc), BindingFlags.Instance | BindingFlags.NonPublic),
 				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistMarginAdjustment_Transpiler)));
 			harmony.Patch(
-				typeof(ColonistBarDrawLocsFinder).GetMethod("CalculateDrawLocs", BindingFlags.Instance | BindingFlags.NonPublic,
+				typeof(ColonistBarDrawLocsFinder).GetMethod(nameof(ColonistBarDrawLocsFinder.CalculateDrawLocs), BindingFlags.Instance | BindingFlags.NonPublic,
 					null, new Type[] { typeof(List<Vector2>), typeof(float), typeof(bool), typeof(int), typeof(int) }, null),
 				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistMarginAdjustment_Transpiler)));
 
 			harmony.Patch(
-				typeof(ColonistBarColonistDrawer).GetMethod("DrawGroupFrame", BindingFlags.Instance | BindingFlags.Public),
+				typeof(ColonistBarColonistDrawer).GetMethod(nameof(ColonistBarColonistDrawer.DrawGroupFrame), BindingFlags.Instance | BindingFlags.Public),
 				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarColonistDrawer_DrawGroupFrame_Transpiler)));
+
+			//harmony.Patch(
+			//	typeof(Test).GetMethod("GetDrawLoc", BindingFlags.Instance | BindingFlags.Public),
+			//	transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.Transpiler)));
+			//harmony.Patch(
+			//	typeof(Test).GetMethod("GetDrawLoc1", BindingFlags.Instance | BindingFlags.Public),
+			//	transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.Transpiler)));
+		}
+
+		static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase __originalMethod)
+		{
+			Log.Message(__originalMethod.Name);
+			foreach (var instruction in instructions)
+			{
+				Log.Message(instruction.ToString());
+				yield return instruction;
+			}
 		}
 
 		static bool ColonistBarDrawLocsFinder_FindBestScale_Prefix(ColonistBarDrawLocsFinder __instance, ref float __result, ref bool onlyOneRow, ref int maxPerGlobalRow, int groupsCount)
@@ -85,71 +102,86 @@ namespace ColonistBarAdjuster
 		}
 
 
-		static IEnumerable<CodeInstruction> ColonistMarginAdjustment_Transpiler(IEnumerable<CodeInstruction> instructions)
+		static IEnumerable<CodeInstruction> ColonistMarginAdjustment_Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase __originalMethod)
 		{
-			bool baseSizeFound = false;
-			bool baseSizeXFound = false;
-			bool baseSizeYFound = false;
-			foreach (var instruction in instructions)
-			{
-				if (!baseSizeFound 
-					&& instruction.opcode == OpCodes.Ldsflda 
+			var list = instructions.ToList();
+
+			// margin functions
+			bool IsBaseSize(CodeInstruction instruction) =>
+				instruction.opcode == OpCodes.Ldsflda
 					&& instruction.operand is FieldInfo fieldInfoBaseSize
 					&& fieldInfoBaseSize.DeclaringType?.FullDescription() == "RimWorld.ColonistBar" 
-					&& fieldInfoBaseSize.Name == "BaseSize")
-				{
-					//Log.Warning("FOUND 'RimWorld.ColonistBar.BaseSize'");
-					baseSizeFound = true;
-				}
-				else if (baseSizeFound)
-				{
-					bool end = true;
-					if (instruction.opcode == OpCodes.Ldfld
-						&& instruction.operand is FieldInfo fieldInfoVector2
-						&& fieldInfoVector2.DeclaringType?.FullDescription() == "UnityEngine.Vector2")
-					{
-						if (fieldInfoVector2.Name == "x")
-						{
-							//Log.Warning("FOUND 'UnityEngine.Vector2.x'");
-							baseSizeXFound = true;
-							end = false;
-						}
-						else if (fieldInfoVector2.Name == "y")
-						{
-							//Log.Warning("FOUND 'UnityEngine.Vector2.y'");
-							baseSizeYFound = true;
-							end = false;
-						}
-					}
-					else if (instruction.opcode == OpCodes.Ldc_R4
-						&& instruction.operand is float value)
-					{
-						if (baseSizeXFound && value == ColonistBarAdjuster.BaseMarginX)
-						{
-							//Log.Warning("REPLACING X MARGIN");
-							instruction.opcode = OpCodes.Call;
-							instruction.operand = typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.MarginX), BindingFlags.Static | BindingFlags.Public).GetGetMethod();
-						}
-						else if (baseSizeYFound && value == ColonistBarAdjuster.BaseMarginY)
-						{
-							//Log.Warning("REPLACING Y MARGIN");
-							instruction.opcode = OpCodes.Call;
-							instruction.operand = typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.MarginY), BindingFlags.Static | BindingFlags.Public).GetGetMethod();
-						}
-					}
+					&& fieldInfoBaseSize.Name == "BaseSize";
+			string IsVectorXorY(CodeInstruction instruction) =>
+				instruction.opcode == OpCodes.Ldfld
+					&& instruction.operand is FieldInfo fieldInfoVector2
+					&& fieldInfoVector2.DeclaringType?.FullDescription() == "UnityEngine.Vector2"
+					? fieldInfoVector2.Name 
+					: null;
+			bool IsMargin(CodeInstruction instruction, float baseMargin) =>
+				instruction.opcode == OpCodes.Ldc_R4 
+				&& instruction.operand is float value
+				&& value == baseMargin;
 
-					if (end)
+			// offset functions
+			bool isGetDrawLoc = __originalMethod.Name == nameof(ColonistBarDrawLocsFinder.GetDrawLoc);
+			bool IsVectorCtor(CodeInstruction instruction) =>
+				instruction.opcode == OpCodes.Newobj
+				&& (Type)instruction.operand.GetType().GetProperty("DeclaringType").GetValue(instruction.operand) == typeof(Vector2)
+				&& (string)instruction.operand.GetType().GetProperty("Name").GetValue(instruction.operand) == ".ctor";
+
+			for (int i = 0; i < list.Count; i++)
+			{
+				// margins
+				if (i < list.Count - 3
+					&& IsBaseSize(list[i])
+					&& IsVectorXorY(list[i + 1]) is string v)
+				{
+					float baseMargin;
+					MethodInfo replacer;
+					switch (v)
 					{
-						//Log.Warning("END");
-						baseSizeXFound = false;
-						baseSizeYFound = false;
-						baseSizeFound = false;
+						case "x":
+							baseMargin = ColonistBarAdjuster.BaseMarginX;
+							replacer = typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.MarginX), BindingFlags.Static | BindingFlags.Public).GetGetMethod();
+							break;
+						case "y":
+							baseMargin = ColonistBarAdjuster.BaseMarginY;
+							replacer = typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.MarginY), BindingFlags.Static | BindingFlags.Public).GetGetMethod();
+							break;
+						default:
+							continue;
+					}
+					i += 2;
+					if (IsMargin(list[i], baseMargin))
+					{
+						list[i].opcode = OpCodes.Call;
+						list[i].operand = replacer;
 					}
 				}
 
-				//Log.Message(instruction.ToString());
-				yield return instruction;
+				// offsets
+				if (isGetDrawLoc
+					&& i < list.Count - 2
+					&& list[i].opcode == OpCodes.Ldloc_1
+					&& IsVectorCtor(list[i + 1]))
+				{
+					list.Insert(i, new CodeInstruction(OpCodes.Call, typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.OffsetX), BindingFlags.Static | BindingFlags.Public).GetGetMethod()));
+					i++; // skip Call
+					list.Insert(i, new CodeInstruction(OpCodes.Add));
+					i += 2; // skip Add and Ldloc_1
+
+					list.Insert(i, new CodeInstruction(OpCodes.Call, typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.OffsetY), BindingFlags.Static | BindingFlags.Public).GetGetMethod()));
+					i++; // skip Call
+					list.Insert(i, new CodeInstruction(OpCodes.Add));
+					i += 2; // skip Add and Newobj
+				}
 			}
+
+			//foreach (var instruction in list)
+			//	Log.Message(instruction.ToString());
+
+			return list;
 		}
 
 		static IEnumerable<CodeInstruction> ColonistBarColonistDrawer_DrawGroupFrame_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -171,6 +203,36 @@ namespace ColonistBarAdjuster
 				//Log.Message(instruction.ToString());
 				yield return instruction;
 			}
+		}
+	}
+
+	public class Test
+	{
+		private List<int> horizontalSlotsPerGroup = new List<int>();
+		private List<int> entriesInGroup = new List<int>();
+
+		public Vector2 GetDrawLoc(float groupStartX, float groupStartY, int group, int numInGroup, float scale)
+		{
+			float num = groupStartX + (float)(numInGroup % horizontalSlotsPerGroup[group]) * scale * (ColonistBar.BaseSize.x + 24f);
+			float y = groupStartY + (float)(numInGroup / horizontalSlotsPerGroup[group]) * scale * (ColonistBar.BaseSize.y + 32f);
+			if (numInGroup >= entriesInGroup[group] - entriesInGroup[group] % horizontalSlotsPerGroup[group])
+			{
+				int num2 = horizontalSlotsPerGroup[group] - entriesInGroup[group] % horizontalSlotsPerGroup[group];
+				num += (float)num2 * scale * (ColonistBar.BaseSize.x + 24f) * 0.5f;
+			}
+			return new Vector2(num, y);
+		}
+
+		public Vector2 GetDrawLoc1(float groupStartX, float groupStartY, int group, int numInGroup, float scale)
+		{
+			float num = groupStartX + (float)(numInGroup % horizontalSlotsPerGroup[group]) * scale * (ColonistBar.BaseSize.x + 24f);
+			float y = groupStartY + (float)(numInGroup / horizontalSlotsPerGroup[group]) * scale * (ColonistBar.BaseSize.y + 32f);
+			if (numInGroup >= entriesInGroup[group] - entriesInGroup[group] % horizontalSlotsPerGroup[group])
+			{
+				int num2 = horizontalSlotsPerGroup[group] - entriesInGroup[group] % horizontalSlotsPerGroup[group];
+				num += (float)num2 * scale * (ColonistBar.BaseSize.x + 24f) * 0.5f;
+			}
+			return new Vector2(num + ColonistBarAdjuster.OffsetX, y + ColonistBarAdjuster.OffsetY);
 		}
 	}
 }
