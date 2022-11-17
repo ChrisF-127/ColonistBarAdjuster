@@ -37,23 +37,6 @@ namespace ColonistBarAdjuster
 			harmony.Patch(
 				typeof(ColonistBarColonistDrawer).GetMethod(nameof(ColonistBarColonistDrawer.DrawGroupFrame), BindingFlags.Instance | BindingFlags.Public),
 				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarColonistDrawer_DrawGroupFrame_Transpiler)));
-
-			//harmony.Patch(
-			//	typeof(Test).GetMethod("GetDrawLoc", BindingFlags.Instance | BindingFlags.Public),
-			//	transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.Transpiler)));
-			//harmony.Patch(
-			//	typeof(Test).GetMethod("GetDrawLoc1", BindingFlags.Instance | BindingFlags.Public),
-			//	transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.Transpiler)));
-		}
-
-		static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase __originalMethod)
-		{
-			Log.Message(__originalMethod.Name);
-			foreach (var instruction in instructions)
-			{
-				Log.Message(instruction.ToString());
-				yield return instruction;
-			}
 		}
 
 		static bool ColonistBarDrawLocsFinder_FindBestScale_Prefix(ColonistBarDrawLocsFinder __instance, ref float __result, ref bool onlyOneRow, ref int maxPerGlobalRow, int groupsCount)
@@ -203,36 +186,6 @@ namespace ColonistBarAdjuster
 				//Log.Message(instruction.ToString());
 				yield return instruction;
 			}
-		}
-	}
-
-	public class Test
-	{
-		private List<int> horizontalSlotsPerGroup = new List<int>();
-		private List<int> entriesInGroup = new List<int>();
-
-		public Vector2 GetDrawLoc(float groupStartX, float groupStartY, int group, int numInGroup, float scale)
-		{
-			float num = groupStartX + (float)(numInGroup % horizontalSlotsPerGroup[group]) * scale * (ColonistBar.BaseSize.x + 24f);
-			float y = groupStartY + (float)(numInGroup / horizontalSlotsPerGroup[group]) * scale * (ColonistBar.BaseSize.y + 32f);
-			if (numInGroup >= entriesInGroup[group] - entriesInGroup[group] % horizontalSlotsPerGroup[group])
-			{
-				int num2 = horizontalSlotsPerGroup[group] - entriesInGroup[group] % horizontalSlotsPerGroup[group];
-				num += (float)num2 * scale * (ColonistBar.BaseSize.x + 24f) * 0.5f;
-			}
-			return new Vector2(num, y);
-		}
-
-		public Vector2 GetDrawLoc1(float groupStartX, float groupStartY, int group, int numInGroup, float scale)
-		{
-			float num = groupStartX + (float)(numInGroup % horizontalSlotsPerGroup[group]) * scale * (ColonistBar.BaseSize.x + 24f);
-			float y = groupStartY + (float)(numInGroup / horizontalSlotsPerGroup[group]) * scale * (ColonistBar.BaseSize.y + 32f);
-			if (numInGroup >= entriesInGroup[group] - entriesInGroup[group] % horizontalSlotsPerGroup[group])
-			{
-				int num2 = horizontalSlotsPerGroup[group] - entriesInGroup[group] % horizontalSlotsPerGroup[group];
-				num += (float)num2 * scale * (ColonistBar.BaseSize.x + 24f) * 0.5f;
-			}
-			return new Vector2(num + ColonistBarAdjuster.OffsetX, y + ColonistBarAdjuster.OffsetY);
 		}
 	}
 }
