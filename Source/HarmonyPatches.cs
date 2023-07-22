@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Mono.Cecil.Cil;
 using RimWorld;
 using RimWorld.Planet;
 using System;
@@ -37,6 +38,10 @@ namespace ColonistBarAdjuster
 			harmony.Patch(
 				typeof(ColonistBarColonistDrawer).GetMethod(nameof(ColonistBarColonistDrawer.DrawGroupFrame), BindingFlags.Instance | BindingFlags.Public),
 				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarColonistDrawer_DrawGroupFrame_Transpiler)));
+
+			harmony.Patch(
+				AccessTools.Method(typeof(ColonistBarColonistDrawer), nameof(ColonistBarColonistDrawer.DrawColonist)),
+				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarColonistDrawer_DrawColonist_Transpiler)));
 		}
 
 		static bool ColonistBarDrawLocsFinder_FindBestScale_Prefix(ColonistBarDrawLocsFinder __instance, ref float __result, ref bool onlyOneRow, ref int maxPerGlobalRow, int groupsCount)
@@ -186,6 +191,27 @@ namespace ColonistBarAdjuster
 				//Log.Message(instruction.ToString());
 				yield return instruction;
 			}
+		}
+
+		static IEnumerable<CodeInstruction> ColonistBarColonistDrawer_DrawColonist_Transpiler(IEnumerable<CodeInstruction> instructions)
+		{
+			var added = false;
+			foreach (var instruction in instructions)
+			{
+				yield return instruction;
+
+				//    ldsfld UnityEngine.Vector2 ColonistBarAdjuster.TEST::PawnTextureSize
+				// ++ call static System.Single ColonistBarAdjuster.ColonistBarAdjuster::get_BaseScale()
+				// ++ call static UnityEngine.Vector2 UnityEngine.Vector2::op_Multiply(UnityEngine.Vector2 a, System.Single d)
+				if (instruction.opcode == OpCodes.Ldsfld && instruction.operand is FieldInfo fi && fi.Name == nameof(ColonistBarColonistDrawer.PawnTextureSize))
+				{
+					yield return new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(ColonistBarAdjuster), nameof(ColonistBarAdjuster.BaseScale)));
+					yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Vector2), "op_Multiply", new Type[] { typeof(Vector2), typeof(float) }));
+					added = true;
+				}
+			}
+			if (!added)
+				Log.Error($"{nameof(ColonistBarAdjuster)}: failed to apply {nameof(ColonistBarColonistDrawer_DrawColonist_Transpiler)} patch");
 		}
 	}
 }
