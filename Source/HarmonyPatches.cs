@@ -25,23 +25,23 @@ namespace ColonistBarAdjuster
 			harmony.Patch(
 				typeof(ColonistBarDrawLocsFinder).GetMethod(nameof(ColonistBarDrawLocsFinder.FindBestScale), BindingFlags.Instance | BindingFlags.NonPublic,
 					null, new Type[] { typeof(bool).MakeByRefType(), typeof(int).MakeByRefType(), typeof(int) }, null),
-				prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarDrawLocsFinder_FindBestScale_Prefix)));
+				prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(ColonistBarDrawLocsFinder_FindBestScale_Prefix)));
 
 			harmony.Patch(
 				typeof(ColonistBarDrawLocsFinder).GetMethod(nameof(ColonistBarDrawLocsFinder.GetDrawLoc), BindingFlags.Instance | BindingFlags.NonPublic),
-				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistMarginAdjustment_Transpiler)));
+				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(ColonistMarginAdjustment_Transpiler)));
 			harmony.Patch(
 				typeof(ColonistBarDrawLocsFinder).GetMethod(nameof(ColonistBarDrawLocsFinder.CalculateDrawLocs), BindingFlags.Instance | BindingFlags.NonPublic,
 					null, new Type[] { typeof(List<Vector2>), typeof(float), typeof(bool), typeof(int), typeof(int) }, null),
-				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistMarginAdjustment_Transpiler)));
+				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(ColonistMarginAdjustment_Transpiler)));
 
 			harmony.Patch(
 				typeof(ColonistBarColonistDrawer).GetMethod(nameof(ColonistBarColonistDrawer.DrawGroupFrame), BindingFlags.Instance | BindingFlags.Public),
-				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarColonistDrawer_DrawGroupFrame_Transpiler)));
+				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(ColonistBarColonistDrawer_DrawGroupFrame_Transpiler)));
 
 			harmony.Patch(
 				AccessTools.Method(typeof(ColonistBarColonistDrawer), nameof(ColonistBarColonistDrawer.DrawColonist)),
-				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.ColonistBarColonistDrawer_DrawColonist_Transpiler)));
+				transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(ColonistBarColonistDrawer_DrawColonist_Transpiler)));
 		}
 
 		static bool ColonistBarDrawLocsFinder_FindBestScale_Prefix(ColonistBarDrawLocsFinder __instance, ref float __result, ref bool onlyOneRow, ref int maxPerGlobalRow, int groupsCount)
