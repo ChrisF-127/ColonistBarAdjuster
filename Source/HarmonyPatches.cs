@@ -20,7 +20,7 @@ namespace ColonistBarAdjuster
 	{
 		static HarmonyPatches()
 		{
-			Harmony harmony = new Harmony("syrus.colonistbaradjuster");
+			var harmony = new Harmony("syrus.colonistbaradjuster");
 
 			harmony.Patch(
 				typeof(ColonistBarDrawLocsFinder).GetMethod(nameof(ColonistBarDrawLocsFinder.FindBestScale), BindingFlags.Instance | BindingFlags.NonPublic,
@@ -46,16 +46,16 @@ namespace ColonistBarAdjuster
 
 		static bool ColonistBarDrawLocsFinder_FindBestScale_Prefix(ColonistBarDrawLocsFinder __instance, ref float __result, ref bool onlyOneRow, ref int maxPerGlobalRow, int groupsCount)
 		{
-			float scale = ColonistBarAdjuster.BaseScale;
-			maxPerGlobalRow = ColonistBarAdjuster.ColonistsPerRow;
-			List<ColonistBar.Entry> entries = __instance.ColonistBar.Entries;
+			var scale = ColonistBarAdjuster.Settings.BaseScale;
+			maxPerGlobalRow = ColonistBarAdjuster.Settings.ColonistsPerRow;
+			var entries = __instance.ColonistBar.Entries;
 			while (true)
 			{
 				onlyOneRow = true;
 
 				if (__instance.TryDistributeHorizontalSlotsBetweenGroups(maxPerGlobalRow, groupsCount))
 				{
-					int allowedRowsCountForScale = ColonistBarAdjuster.MaxNumberOfRows;
+					int allowedRowsCountForScale = ColonistBarAdjuster.Settings.MaxNumberOfRows;
 					bool flag = true;
 					int group = -1;
 					for (int i = 0; i < entries.Count; i++)
@@ -80,8 +80,8 @@ namespace ColonistBarAdjuster
 				// use standard RimWorld logic if we fail to create the colonist bar while respecting the limitations set in the settings (colonists per row & row count)
 				scale *= 0.95f;
 
-				float widthPerColonist = (ColonistBar.BaseSize.x + ColonistBarAdjuster.MarginX) * scale;
-				float totalWidth = ColonistBarDrawLocsFinder.MaxColonistBarWidth - (groupsCount - 1f) * 25f * scale; 
+				var widthPerColonist = (ColonistBar.BaseSize.x + ColonistBarAdjuster.Settings.MarginX) * scale;
+				var totalWidth = ColonistBarDrawLocsFinder.MaxColonistBarWidth - (groupsCount - 1f) * 25f * scale; 
 				maxPerGlobalRow = Mathf.FloorToInt(totalWidth / widthPerColonist);
 			}
 			__result = scale;
@@ -130,11 +130,11 @@ namespace ColonistBarAdjuster
 					switch (v)
 					{
 						case "x":
-							baseMargin = ColonistBarAdjuster.BaseMarginX;
+							baseMargin = ColonistBarAdjusterSettings.Default_MarginX;
 							replacer = typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.MarginX), BindingFlags.Static | BindingFlags.Public).GetGetMethod();
 							break;
 						case "y":
-							baseMargin = ColonistBarAdjuster.BaseMarginY;
+							baseMargin = ColonistBarAdjusterSettings.Default_MarginY;
 							replacer = typeof(ColonistBarAdjuster).GetProperty(nameof(ColonistBarAdjuster.MarginY), BindingFlags.Static | BindingFlags.Public).GetGetMethod();
 							break;
 						default:
