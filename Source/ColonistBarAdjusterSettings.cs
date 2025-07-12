@@ -27,81 +27,49 @@ namespace ColonistBarAdjuster
 		public float OffsetX
 		{
 			get => _offsetX;
-			set
-			{
-				_offsetX = value;
-				ApplyChanges();
-			}
+			set => SetValue(ref _offsetX, value, ApplyChanges);
 		}
 		private float _offsetY = Default_OffsetY;
 		public float OffsetY
 		{
 			get => _offsetY;
-			set
-			{
-				_offsetY = value;
-				ApplyChanges();
-			}
+			set => SetValue(ref _offsetY, value, ApplyChanges);
 		}
 		private float _baseScale = Default_BaseScale;
 		public float BaseScale
 		{
 			get => _baseScale;
-			set
-			{
-				_baseScale = value;
-				ApplyChanges();
-			}
+			set => SetValue(ref _baseScale, value, ApplyChanges);
 		}
 		private int _colonistsPerRow = Default_ColonistsPerRow;
 		public int ColonistsPerRow
 		{
 			get => _colonistsPerRow;
-			set
-			{
-				_colonistsPerRow = value;
-				ApplyChanges();
-			}
+			set => SetValue(ref _colonistsPerRow, value, ApplyChanges);
 		}
 		private int _maxNumberOfRows = Default_MaxNumberOfRows;
 		public int MaxNumberOfRows
 		{
 			get => _maxNumberOfRows;
-			set
-			{
-				_maxNumberOfRows = value;
-				ApplyChanges();
-			}
+			set => SetValue(ref _maxNumberOfRows, value, ApplyChanges);
 		}
 		private float _marginX = Default_MarginX;
 		public float MarginX
 		{
 			get => _marginX;
-			set
-			{
-				_marginX = value;
-				ApplyChanges();
-			}
+			set => SetValue(ref _marginX, value, ApplyChanges);
 		}
 		private float _marginY = Default_MarginY;
 		public float MarginY
 		{
 			get => _marginY;
-			set
-			{
-				_marginY = value;
-				ApplyChanges();
-			}
+			set => SetValue(ref _marginY, value, ApplyChanges);
 		}
 		private bool _hideBackground = Default_HideBackground;
 		public bool HideBackground
 		{
 			get => _hideBackground;
-			set
-			{
-				_hideBackground = value;
-				ApplyChanges();
-			}
+			set => SetValue(ref _hideBackground, value, ApplyChanges);
 		}
 		#endregion
 
@@ -249,6 +217,15 @@ namespace ColonistBarAdjuster
 				bar.entriesDirty = true;
 				bar.CheckRecacheEntries();
 			}
+		}
+
+		private static void SetValue<T>(ref T storage, T value, Action action = null)
+			where T : IComparable
+		{
+			if (storage == null && value == null || storage?.Equals(value) == true)
+				return;
+			storage = value;
+			action?.Invoke();
 		}
 		#endregion
 	}
