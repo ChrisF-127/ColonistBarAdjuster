@@ -27,49 +27,49 @@ namespace ColonistBarAdjuster
 		public float OffsetX
 		{
 			get => _offsetX;
-			set => SetValue(ref _offsetX, value, ApplyChanges);
+			set => Util.SetValue(ref _offsetX, value, v => ApplyChanges());
 		}
 		private float _offsetY = Default_OffsetY;
 		public float OffsetY
 		{
 			get => _offsetY;
-			set => SetValue(ref _offsetY, value, ApplyChanges);
+			set => Util.SetValue(ref _offsetY, value, v => ApplyChanges());
 		}
 		private float _baseScale = Default_BaseScale;
 		public float BaseScale
 		{
 			get => _baseScale;
-			set => SetValue(ref _baseScale, value, ApplyChanges);
+			set => Util.SetValue(ref _baseScale, value, v => ApplyChanges());
 		}
 		private int _colonistsPerRow = Default_ColonistsPerRow;
 		public int ColonistsPerRow
 		{
 			get => _colonistsPerRow;
-			set => SetValue(ref _colonistsPerRow, value, ApplyChanges);
+			set => Util.SetValue(ref _colonistsPerRow, value, v => ApplyChanges());
 		}
 		private int _maxNumberOfRows = Default_MaxNumberOfRows;
 		public int MaxNumberOfRows
 		{
 			get => _maxNumberOfRows;
-			set => SetValue(ref _maxNumberOfRows, value, ApplyChanges);
+			set => Util.SetValue(ref _maxNumberOfRows, value, v => ApplyChanges());
 		}
 		private float _marginX = Default_MarginX;
 		public float MarginX
 		{
 			get => _marginX;
-			set => SetValue(ref _marginX, value, ApplyChanges);
+			set => Util.SetValue(ref _marginX, value, v => ApplyChanges());
 		}
 		private float _marginY = Default_MarginY;
 		public float MarginY
 		{
 			get => _marginY;
-			set => SetValue(ref _marginY, value, ApplyChanges);
+			set => Util.SetValue(ref _marginY, value, v => ApplyChanges());
 		}
 		private bool _hideBackground = Default_HideBackground;
 		public bool HideBackground
 		{
 			get => _hideBackground;
-			set => SetValue(ref _hideBackground, value, ApplyChanges);
+			set => Util.SetValue(ref _hideBackground, value, v => ApplyChanges());
 		}
 		#endregion
 
@@ -162,7 +162,7 @@ namespace ColonistBarAdjuster
 			}
 			finally
 			{
-				ControlsBuilder.End();
+				ControlsBuilder.End(offsetY);
 			}
 		}
 		#endregion
@@ -217,15 +217,6 @@ namespace ColonistBarAdjuster
 				bar.entriesDirty = true;
 				bar.CheckRecacheEntries();
 			}
-		}
-
-		private static void SetValue<T>(ref T storage, T value, Action action = null)
-			where T : IComparable
-		{
-			if (storage == null && value == null || storage?.Equals(value) == true)
-				return;
-			storage = value;
-			action?.Invoke();
 		}
 		#endregion
 	}
