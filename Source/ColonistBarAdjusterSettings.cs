@@ -89,7 +89,8 @@ namespace ColonistBarAdjuster
 					"SY_CBA.OffsetXDesc".Translate(),
 					OffsetX,
 					Default_OffsetX,
-					nameof(OffsetX));
+					nameof(OffsetX),
+					float.MinValue);
 				OffsetY = ControlsBuilder.CreateNumeric(
 					ref offsetY,
 					width,
@@ -97,7 +98,8 @@ namespace ColonistBarAdjuster
 					"SY_CBA.OffsetYDesc".Translate(),
 					OffsetY,
 					Default_OffsetY,
-					nameof(OffsetY));
+					nameof(OffsetY),
+					float.MinValue);
 
 				BaseScale = ControlsBuilder.CreateNumeric(
 					ref offsetY,
